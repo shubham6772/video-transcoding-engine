@@ -1,0 +1,25 @@
+ffmpeg -i input.mp4 \
+-filter_complex "\
+[0:v]split=5[v1080][v720][v480][v360][v240];\
+[v1080]scale=1920:1080[v1080o];\
+[v720]scale=1280:720[v720o];\
+[v480]scale=854:480[v480o];\
+[v360]scale=640:360[v360o];\
+[v240]scale=426:240[v240o]" \
+\
+-map "[v1080o]" -map a:0 -c:v:0 libx264 -b:v:0 5000k \
+-map "[v720o]"  -map a:0 -c:v:1 libx264 -b:v:1 2800k \
+-map "[v480o]"  -map a:0 -c:v:2 libx264 -b:v:2 1400k \
+-map "[v360o]"  -map a:0 -c:v:3 libx264 -b:v:3 800k \
+-map "[v240o]"  -map a:0 -c:v:4 libx264 -b:v:4 400k \
+\
+-c:a aac -b:a 128k \
+\
+-f hls \
+-hls_time 6 \
+-hls_playlist_type vod \
+-hls_flags independent_segments \
+-master_pl_name master.m3u8 \
+-var_stream_map "v:0,a:0,name:1080p v:1,a:1,name:720p v:2,a:2,name:480p v:3,a:3,name:360p v:4,a:4,name:240p" \
+-hls_segment_filename "%v/seg_%03d.ts" \
+"%v/index.m3u8"
