@@ -1,6 +1,7 @@
 package ffmpeg
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -167,6 +168,8 @@ func CommandBuilder(maxResolution int, videoPath string, videoIdHash string) (st
 		-var_stream_map "%s" \
 		-hls_segment_filename "%s/%%v/seg_%%03d.ts" \
 		-f hls \
+		-progress pipe:1 \
+		-stats_period 1 \
 		"%s/%%v/index.m3u8"`,
 		videoPath,
 		filter,
@@ -179,7 +182,7 @@ func CommandBuilder(maxResolution int, videoPath string, videoIdHash string) (st
 	return cmd, outputPath, nil
 }
 
-func CheckResolutions(videoPath string) int {
+func CheckResolution(videoPath string) (int, error) {
 	cmd := exec.Command(
 		"ffprobe",
 		"-v", "error",
@@ -189,30 +192,80 @@ func CheckResolutions(videoPath string) int {
 		videoPath,
 	)
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf(
+			"ffprobe failed for %s: %w, output: %s",
+			videoPath,
+			err,
+			string(output),
+		)
 	}
 
-	height, err := strconv.Atoi(strings.TrimSpace(string(output)))
+	heightStr := strings.TrimSpace(string(output))
+
+	height, err := strconv.Atoi(heightStr)
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf(
+			"failed to parse height '%s': %w",
+			heightStr,
+			err,
+		)
 	}
 
-	return height
+	logger.Info("video resolution: %d", height)
+
+	return height, nil
 }
 
 
 func ExecuteCommand(command string) error {
-	
 	cmd := exec.Command("sh", "-c", command)
 
-	output, err := cmd.CombinedOutput()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		logger.Error("ffmpeg failed: %v\n%s", err, output)
+		return err
 	}
 
-	logger.Info("%s", string(output))
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+
+		for scanner.Scan() {
+			logger.Info("[FFMPEG] %s", scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			logger.Error("stdout scanner error: %v", err)
+		}
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+
+		for scanner.Scan() {
+			logger.Info("[FFMPEG] %s", scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			logger.Error("stderr scanner error: %v", err)
+		}
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		logger.Error("ffmpeg failed: %v", err)
+		return err
+	}
+
+	logger.Info("ffmpeg completed successfully")
 
 	return nil
 }

@@ -132,7 +132,7 @@ func Debug(format string, v ...any) {
 		return
 	}
 
-	log.Printf("%s:%d: %s", file, line, msg)
+	// log.Printf("%s:%d: %s", file, line, msg)
 	debugLogger.Printf("%s:%d: %s", file, line, msg)
 }
 
@@ -147,7 +147,7 @@ func Info(format string, v ...any) {
 		return
 	}
 
-	log.Printf("%s:%d: %s", file, line, msg)
+	// log.Printf("%s:%d: %s", file, line, msg)
 	infoLogger.Printf("%s:%d: %s", file, line, msg)
 }
 
@@ -162,7 +162,7 @@ func Error(format string, v ...any) {
 		return
 	}
 
-	log.Printf("%s:%d: %s", file, line, msg)
+	// log.Printf("%s:%d: %s", file, line, msg)
 	errorLogger.Printf("%s:%d: %s", file, line, msg)
 }
 
