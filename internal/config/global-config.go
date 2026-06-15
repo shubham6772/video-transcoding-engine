@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"video-processor/internal/constants"
 )
 
@@ -23,6 +24,14 @@ type videoCacheConfig struct {
 type RmqConfigObject struct {
 	RmqURL string
 	RmqQueue string
+}
+
+type storageConfigObject struct {
+	Endpoint string
+	Accesskey string
+	AccessSecret string
+	BucketName string
+	Secure bool
 }
 
 func getENV() string {
@@ -87,4 +96,19 @@ func LoadRMQConfigObject() *RmqConfigObject {
 		RmqQueue: getValueFromEnv("RMQ_QUEUE"),
 	}
 
+}
+
+func LoadStorageConfigObject() *storageConfigObject{
+	val := getValueFromEnv("MINIO_USE_SSL")
+	isSecure, err := strconv.ParseBool(val)
+	if err != nil{
+		panic(err)
+	}
+	return &storageConfigObject{
+		Endpoint : getValueFromEnv("MINIO_ENDPOINT"),
+		Accesskey: getValueFromEnv("MINIO_ACCESS_KEY"),
+		AccessSecret: getValueFromEnv("MINIO_SECRET_KEY"),
+		BucketName: getValueFromEnv("MINIO_BUCKET"),
+		Secure: isSecure,
+	}
 }
