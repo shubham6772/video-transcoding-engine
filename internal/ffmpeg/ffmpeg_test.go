@@ -1,6 +1,7 @@
 package ffmpeg
 
 import (
+	"log"
 	"testing"
 	"video-processor/internal/logger"
 )
@@ -22,9 +23,14 @@ func Test_commandBuilder(t *testing.T) {
 }
 
 func Test_checkResolutions(t *testing.T) {
-	videoPath := "/Users/shubham/Personal/video-processor/input.mp4"
+	videoPath := "/Users/shubham/Personal/video-share-project/video-processor/input.mp4"
 
-	got := CheckResolutions(videoPath)
+	got, err := CheckResolution(videoPath)
+
+	if err != nil{
+		logger.Error("unsupported resolution of video file: %v", err)
+		log.Fatalf("%v", err)
+	}
 
 	want := 1080
 
