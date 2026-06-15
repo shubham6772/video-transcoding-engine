@@ -96,6 +96,5 @@ func main() {
 
 		logger.Info("Waiting for messages...")
 
-		
 	}
 }
