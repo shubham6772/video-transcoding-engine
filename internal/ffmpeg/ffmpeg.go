@@ -3,12 +3,9 @@ package ffmpeg
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"video-processor/internal/config"
 	"video-processor/internal/logger"
 )
 
@@ -64,17 +61,7 @@ var renditions = []Rendition{
 	},
 }
 
-func CommandBuilder(maxResolution int, videoPath string, videoIdHash string) (string, string, error) {
-	videoConfig := config.LoadVideoCacheConfig()
-
-	outputPath := filepath.Join(
-		videoConfig.VideoFilePath,
-		videoIdHash,
-	)
-
-	if err := os.MkdirAll(outputPath, 0755); err != nil {
-		return "", "", fmt.Errorf("create output directory: %w", err)
-	}
+func CommandBuilder(maxResolution int, videoPath string, outputPath string) (string, string, error) {
 
 	var selected []Rendition
 
