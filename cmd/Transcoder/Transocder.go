@@ -79,13 +79,13 @@ func main() {
 
 		logger.Info("transcode command: %v", transcode_command);
 		logger.Info("executing command:")
-		// execerr := ffmpeg.ExecuteCommand(transcode_command)
+		execerr := ffmpeg.ExecuteCommand(transcode_command)
 		
-		// if execerr != nil{
-		// 	logger.Error("failed to execute: %v", transcode_command)
-		// 	msg.Ack(false)
-		// 	continue
-		// }
+		if execerr != nil{
+			logger.Error("failed to execute: %v", transcode_command)
+			msg.Ack(false)
+			continue
+		}
 		logger.Info("video file generated at location: %s", output_path)
 
 		err = msg.Ack(false)
